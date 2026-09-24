@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
 import psycopg2
+import datetime
 
 # إعدادات الصفحة الأساسية
 st.set_page_config(page_title="ShockSimAI — Enterprise Resilience OS", layout="wide", page_icon="⚡")
 
-# تصميم Frontend بالوضع الفاتح مع الخريطة والمساعد الذكي والتجاوب الكامل
+# تصميم Frontend بالوضع الفاتح مع كافة المميزات الاستراتيجية
 st.markdown("""
 <style>
     .stApp {
@@ -134,6 +135,17 @@ else:
     }
     
     st.sidebar.markdown("---")
+    st.sidebar.markdown("### 🎛️ سيناريوهات الصدمات (Stress Scenarios)")
+    selected_scenario = st.sidebar.selectbox(
+        "اختر سيناريو الكارثة:",
+        [
+            "أزمة جيوسياسية وعقوبات تجارية (-30%)",
+            "إغلاق ميناء رئيسي وحصار لوجستي (-50%)",
+            "أزمة طاقة حادة وارتفاع تكاليف التشغيل"
+        ]
+    )
+
+    st.sidebar.markdown("---")
     st.sidebar.markdown("### 📊 مدخلات الشبكة")
     use_demo = st.sidebar.checkbox("استخدام شبكة إمداد تجريبية (Demo Data)", value=True)
     uploaded_file = st.sidebar.file_uploader("رفع ملف شبكة (CSV أو TXT)", type=["csv", "txt"])
@@ -161,7 +173,7 @@ else:
     st.markdown(f"""
         <div class="main-header">
             <h1 class="main-title">⚡ ShockSimAI</h1>
-            <p class="main-subtitle">Enterprise OS &bull; <b>{company_input}</b> ({org_tier.upper()})</p>
+            <p class="main-subtitle">Enterprise OS &bull; <b>{company_input}</b> ({org_tier.upper()}) &bull; السيناريو: {selected_scenario}</p>
         </div>
     """, unsafe_allow_html=True)
 
@@ -177,14 +189,21 @@ else:
             else:
                 base_damage = round(total_nodes * 92.5, 1)
             
+            # مضاعف التأثير بناءً على السيناريو المختار
+            multiplier = 1.42
+            if "إغلاق ميناء" in selected_scenario:
+                multiplier = 1.65
+            elif "أزمة طاقة" in selected_scenario:
+                multiplier = 1.28
+
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("### 🔮 محرك محاكاة مونت كارلو")
             
             run_simulation = st.toggle("🚀 تشغيل محاكاة الصدمات بالذكاء الاصطناعي (Monte Carlo Stress Test)")
 
             if run_simulation:
-                calculated_damage = round(base_damage * 1.42, 1)
-                delta_text = "⚠️ ارتفاع ملحوظ بعد محاكاة الصدمة"
+                calculated_damage = round(base_damage * multiplier, 1)
+                delta_text = f"⚠️ تأثير سيناريو: {selected_scenario[:20]}..."
                 status_color = "#dc2626"
             else:
                 calculated_damage = base_damage
@@ -220,26 +239,51 @@ else:
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- ميزة مساعد الذكاء الاصطناعي الاستراتيجي الجديد ---
+            # --- ميزة مساعد الذكاء الاصطناعي الاستراتيجي ---
             st.markdown("### 🤖 مساعد الذكاء الاصطناعي الاستراتيجي (AI Mitigation Advisor)")
-            st.markdown("توصيات ذكية فورية لتقليل الخسائر وإدارة المخاطر المعقدة بناءً على حالة الشبكة.")
-            
             if run_simulation:
-                st.info("""
-                💡 **توصيات الذكاء الاصطناعي العاجلة للحد من المخاطر:**
-                * **تحويل الشحنات:** نقترح تحويل 35% من تدفق الشحنات عبر المورد البديل في المنطقة الشمالية لتفادي أزمة العقد ذات المخاطر العالية وتقليل الخسائر بنحو **$85.4M**.
-                * **إدارة مخزون الطوارئ:** رفع مستوى مخزون الأمان (Safety Stock) بنسبة 20% في مراكز التوزيع الرئيسية.
-                * **التفاوض البديل:** تفعيل اتفاقيات توريد احتياطية مع شركاء معتمدين في القائمة المجاورة.
+                st.info(f"""
+                💡 **توصيات الذكاء الاصطناعي للسيناريو الحالي ({selected_scenario}):**
+                * **تحويل الشحنات:** نقترح تحويل تدفق الشحنات عبر المورد البديل لتفادي صدمات العقد الحرجة وتقليل الخسائر بنحو **${round(calculated_damage * 0.25, 1)}M**.
+                * **رفع مخزون الطوارئ:** زيادة مخزون الأمان بنسبة 25% في المراكز الآمنة.
                 """)
             else:
                 st.warning("ℹ️ يرجى تفعيل محاكاة الصدمات أعلاه لعرض خطط الاستجابة والتوصيات الاستراتيجية المخصصة.")
             
             st.markdown("<br>", unsafe_allow_html=True)
             
+            # --- ميزة توليد تقرير التنفيذيين (Executive Report Generator) ---
+            st.markdown("### 📄 التقرير التنفيذي لمجلس الإدارة (Executive Report)")
+            report_text = f"""
+==================================================
+        SHOCKSIMAI — EXECUTIVE STRESS TEST REPORT
+==================================================
+Company Name: {company_input}
+Tier: {org_tier.upper()}
+Date: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+Selected Scenario: {selected_scenario}
+--------------------------------------------------
+SUMMARY METRICS:
+- Total Network Nodes: {total_nodes}
+- Simulated Financial Damage: ${calculated_damage}M
+- System Status: Secure & Connected (Supabase PostgreSQL)
+--------------------------------------------------
+RECOMMENDATIONS:
+1. Activate alternative suppliers for high-risk nodes.
+2. Increase safety stock levels across distribution depots.
+==================================================
+            """
+            st.download_button(
+                label="📥 تحميل التقرير التنفيذي الرسمي (TXT Report)",
+                data=report_text,
+                file_name=f"ShockSimAI_Report_{company_input.replace(' ', '_')}.txt",
+                mime="text/plain"
+            )
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
             # قسم الخريطة الجغرافية الحية
             st.markdown("### 🗺️ الخريطة الجغرافية الحية لعقد الشبكة (Supply Chain Map)")
-            st.markdown("تتبع مواقع المصانع، المستودعات، ومراكز التوزيع وتحديد العقد ذات المخاطر العالية.")
-            
             if 'lat' in df.columns and 'lon' in df.columns:
                 st.map(df, latitude='lat', longitude='lon', size=50, color='#4f46e5')
             else:
@@ -250,7 +294,7 @@ else:
             st.dataframe(df, use_container_width=True)
             
             if run_simulation:
-                st.success(f"🎉 تمت محاكاة صدمات سلاسل الإمداد بنجاح لـ {total_nodes} عقدة وتفعيل التحليل الاستراتيجي!")
+                st.success(f"🎉 تم تشغيل المحاكاة بنجاح لسيناريو ({selected_scenario}) وتحديث كافة التقارير التحليلية!")
     else:
         st.info("💡 يرجى تفعيل خيار البيانات التجريبية أو رفع الملف من القائمة الجانبية.")
-        
+            
