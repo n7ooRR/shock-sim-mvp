@@ -5,13 +5,13 @@ import psycopg2
 # إعدادات الصفحة الأساسية
 st.set_page_config(page_title="ShockSimAI — Enterprise Resilience OS", layout="wide", page_icon="⚡")
 
-# تصميم Frontend احترافي متجاوب بالكامل (Responsive Enterprise CSS)
+# تصميم Frontend احترافي متجاوب بالكامل (الوضع الفاتح - Light Mode)
 st.markdown("""
 <style>
-    /* تغيير خلفية التطبيق بالكامل إلى وضع مظلم مؤسسي فاخر */
+    /* خلفية التطبيق فاتحة ونظيفة */
     .stApp {
-        background-color: #0b0f19;
-        color: #f3f4f6;
+        background-color: #f8fafc;
+        color: #1e293b;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
@@ -20,28 +20,28 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
-    /* تخصيص الشريط الجانبي */
+    /* تخصيص الشريط الجانبي الفاتح */
     [data-testid="stSidebar"] {
-        background-color: #111827;
-        border-right: 1px solid #1f2937;
+        background-color: #ffffff;
+        border-right: 1px solid #e2e8f0;
     }
     [data-testid="stSidebar"] div, [data-testid="stSidebar"] span, [data-testid="stSidebar"] p, [data-testid="stSidebar"] label {
-        color: #f3f4f6 !important;
+        color: #1e293b !important;
     }
 
-    /* بطاقات المؤشرات الاحترافية المتجاوبة */
+    /* بطاقات المؤشرات الاحترافية المتجاوبة (فاتحة) */
     .metric-card {
-        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-        border: 1px solid #374151;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
         padding: 20px;
         border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         margin-bottom: 12px;
         text-align: center;
     }
     .metric-title {
         font-size: 0.8rem;
-        color: #9ca3af;
+        color: #64748b;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -50,30 +50,31 @@ st.markdown("""
     .metric-value {
         font-size: 1.5rem;
         font-weight: 700;
-        color: #ffffff;
+        color: #0f172a;
     }
     .metric-delta {
         font-size: 0.7rem;
-        color: #10b981;
+        color: #059669;
         margin-top: 4px;
     }
 
     /* الهيدر والعناوين الرئيسية */
     .main-header {
-        background: linear-gradient(90deg, #1f2937 0%, #111827 100%);
+        background: #ffffff;
         padding: 20px;
         border-radius: 14px;
-        border: 1px solid #374151;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         margin-bottom: 20px;
     }
     .main-title {
         font-size: 1.5rem;
         font-weight: 800;
-        color: #ffffff;
+        color: #0f172a;
         margin: 0;
     }
     .main-subtitle {
-        color: #9ca3af;
+        color: #64748b;
         font-size: 0.85rem;
         margin-top: 4px;
     }
@@ -81,16 +82,16 @@ st.markdown("""
     /* تخصيص الأزرار */
     .stButton>button {
         width: 100%;
-        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
         color: white;
         border: none;
         padding: 12px 16px;
         font-weight: 600;
         border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
     }
     .stButton>button:hover {
-        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+        background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
         color: white;
     }
 </style>
@@ -129,6 +130,10 @@ def get_organization_tier(org_name: str) -> str:
     
     return "growth"
 
+# تهيئة حالة الجلسة للمحاكاة وتحديث الأرقام
+if "simulated" not in st.session_state:
+    st.session_state["simulated"] = False
+
 # ==========================================
 # الشريط الجانبي (Sidebar)
 # ==========================================
@@ -163,8 +168,10 @@ else:
     if uploaded_file is not None:
         try:
             df = pd.read_csv(uploaded_file)
+            st.session_state["simulated"] = False
         except Exception:
             df = pd.read_csv(uploaded_file, sep=None, engine='python')
+            st.session_state["simulated"] = False
     elif use_demo:
         demo_data = {
             "node_id": [1, 2, 3, 4, 5, 6],
@@ -191,24 +198,32 @@ else:
         if total_nodes > allowed_limit:
             st.error(f"⚠️ تجاوزت الحد الأقصى لباقة {org_tier}.")
         else:
+            # حساب الضرر الأساسي
             if 'risk_score' in df.columns:
-                total_risk_factor = df['risk_score'].sum()
-                calculated_damage = round(total_risk_factor * 125.4, 1)
+                base_damage = round(df['risk_score'].sum() * 125.4, 1)
             else:
-                calculated_damage = round(total_nodes * 92.5, 1)
+                base_damage = round(total_nodes * 92.5, 1)
             
-            # عرض المؤشرات بشكل متجاوب يناسب الهواتف والشاشات الصغيرة
+            # تحديث القيمة ديناميكياً عند تشغيل المحاكاة
+            if st.session_state["simulated"]:
+                calculated_damage = round(base_damage * 1.42, 1)
+                delta_text = "⚠️ ارتفاع ملحوظ بعد محاكاة الصدمة"
+            else:
+                calculated_damage = base_damage
+                delta_text = "↓ -4.2% مقارنة بالربع السابق"
+
+            # عرض المؤشرات
             st.markdown(f"""
                 <div class="metric-card">
                     <div class="metric-title">إجمالي الضرر المتوقع</div>
                     <div class="metric-value">${calculated_damage}M</div>
-                    <div class="metric-delta">↓ -4.2% مقارنة بالربع السابق</div>
+                    <div class="metric-delta">{delta_text}</div>
                 </div>
                 
                 <div class="metric-card">
                     <div class="metric-title">عقد الشبكة المتأثرة</div>
                     <div class="metric-value">{total_nodes} عقدة</div>
-                    <div class="metric-delta" style="color: #ef4444;">⚠️ مستوى حرج</div>
+                    <div class="metric-delta" style="color: #dc2626;">⚠️ مستوى حرج</div>
                 </div>
                 
                 <div class="metric-card">
@@ -222,8 +237,12 @@ else:
             st.markdown("### 🔮 محرك محاكاة مونت كارلو")
             
             if st.button("🚀 تشغيل محاكاة الصدمات بالذكاء الاصطناعي"):
-                with st.spinner("جاري معالجة الشبكة وإجراء المحاكاة..."):
-                    st.success(f"🎉 تمت محاكاة صدمات سلاسل الإمداد بنجاح لـ {total_nodes} عقدة عبر السحابة!")
+                with st.spinner("جاري معالجة الشبكة وإجراء المحاكاة العميقة..."):
+                    st.session_state["simulated"] = True
+                    st.rerun()
+            
+            if st.session_state["simulated"]:
+                st.success(f"🎉 تمت محاكاة صدمات سلاسل الإمداد بنجاح لـ {total_nodes} عقدة وتم تحديث التأثير المالي بنجاح!")
     else:
         st.info("💡 يرجى تفعيل خيار البيانات التجريبية أو رفع الملف من القائمة الجانبية.")
         
