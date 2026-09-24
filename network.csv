@@ -1,0 +1,3 @@
+source,target,weight,cost
+FactoryA,WarehouseB,0.9,40
+WarehouseB,ClientC,0.8,20
