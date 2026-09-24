@@ -145,7 +145,6 @@ else:
         ]
     )
 
-    # ميزة أوقات الذروة الجديدة في الشريط الجانبي
     peak_season_mode = st.sidebar.checkbox("🔥 تفعيل وضع موسم الذروة (Peak Season Mode)", value=False)
 
     st.sidebar.markdown("---")
@@ -200,13 +199,17 @@ else:
             elif "أزمة طاقة" in selected_scenario:
                 multiplier = 1.28
 
-            # تطبيق مضاعف الذروة إذا تم تفعيله (مثلاً زيادة الضرر بنسبة 45% في أوقات الذروة)
             peak_multiplier = 1.45 if peak_season_mode else 1.0
 
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("### 🔮 محرك محاكاة مونت كارلو")
             
-            run_simulation = st.toggle("🚀 تشغيل محاكاة الصدمات بالذكاء الاصطناعي (Monte Carlo Stress Test)")
+            # زر التشغيل الثابت مع مفتاح الحالة (key) لمنع أي تعليق أو إعادة تعيين خاطئة
+            run_simulation = st.toggle(
+                "🚀 تشغيل محاكاة الصدمات بالذكاء الاصطناعي (Monte Carlo Stress Test)", 
+                value=False, 
+                key="simulation_toggle_state"
+            )
 
             if run_simulation:
                 calculated_damage = round(base_damage * multiplier * peak_multiplier, 1)
@@ -292,7 +295,7 @@ else:
                 * **توفير السيولة البديلة:** تجهيز خطوط تمويل إضافية لتقليل تأثير الصدمة المالية بمقدار **${round(calculated_damage * 0.3, 1)}M**.
                 """)
             else:
-                st.warning("ℹ️ يرجى تفعيل محاكاة الصدمات أعلاه لعرض خطط الاستجابة والتوصيات الاستراتيجية المخصصة.")
+                st.warning("ℹ️ يرجى تفعيل محاكاة الصدمات أعلاه (عبر مفتاح التبديل) لعرض خطط الاستجابة والتوصيات الاستراتيجية المخصصة.")
             
             st.markdown("<br>", unsafe_allow_html=True)
             
