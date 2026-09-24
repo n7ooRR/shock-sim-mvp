@@ -2,8 +2,7 @@ import streamlit as st
 import pandas as pd
 import psycopg2
 import datetime
-import os
-from weasyprint import HTML
+import base64
 
 # إعدادات الصفحة الأساسية
 st.set_page_config(page_title="ShockSimAI — Enterprise Resilience OS", layout="wide", page_icon="⚡")
@@ -112,33 +111,35 @@ def get_organization_tier(org_name: str) -> str:
     return "growth"
 
 # ==========================================
-# وظيفة توليد التقرير الاحترافي بصيغة PDF
+# وظيفة توليد التقرير المؤسسي بصيغة HTML قابلة للطباعة كـ PDF
 # ==========================================
-def generate_executive_pdf(company, tier, mode, scenario, nodes_count, damage_val):
+def create_downloadable_report(company, tier, mode, scenario, nodes_count, damage_val):
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ar" dir="rtl">
     <head>
         <meta charset="UTF-8">
+        <title>ShockSimAI - Executive Report</title>
         <style>
-            @page {{
-                size: A4;
-                margin: 20mm;
-                background-color: #ffffff;
-            }}
             body {{
-                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 color: #1e293b;
                 line-height: 1.6;
-                font-size: 12pt;
+                padding: 40px;
+                background-color: #ffffff;
+                max-width: 800px;
+                margin: 0 auto;
             }}
             .header {{
                 border-bottom: 3px solid #0f172a;
                 padding-bottom: 15px;
                 margin-bottom: 25px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
             }}
             .logo {{
-                font-size: 22pt;
+                font-size: 20pt;
                 font-weight: bold;
                 color: #0f172a;
             }}
@@ -151,8 +152,8 @@ def generate_executive_pdf(company, tier, mode, scenario, nodes_count, damage_va
                 color: #0f172a;
                 border-bottom: 1px solid #e2e8f0;
                 padding-bottom: 5px;
-                margin-top: 20px;
-                font-size: 14pt;
+                margin-top: 25px;
+                font-size: 13pt;
             }}
             .card-box {{
                 background-color: #f8fafc;
@@ -161,36 +162,44 @@ def generate_executive_pdf(company, tier, mode, scenario, nodes_count, damage_va
                 padding: 15px;
                 margin-bottom: 15px;
             }}
-            table {{
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 15px;
-                margin-bottom: 20px;
+            ul {{
+                padding-right: 20px;
             }}
-            th, td {{
-                border: 1px solid #cbd5e1;
-                padding: 10px;
-                text-align: right;
-                font-size: 10pt;
-            }}
-            th {{
-                background-color: #f1f5f9;
-                color: #0f172a;
+            li {{
+                margin-bottom: 8px;
             }}
             .footer {{
                 margin-top: 40px;
                 border-top: 1px solid #e2e8f0;
-                padding-top: 10px;
+                padding-top: 15px;
                 font-size: 9pt;
                 color: #94a3b8;
                 text-align: center;
             }}
+            .print-btn {{
+                background-color: #0f172a;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 11pt;
+                margin-bottom: 20px;
+            }}
+            @media print {{
+                .print-btn {{ display: none; }}
+                body {{ padding: 0; }}
+            }}
         </style>
     </head>
     <body>
+        <button class="print-btn" onclick="window.print()">🖨️ طباعة التقرير أو حفظ كـ PDF</button>
+        
         <div class="header">
-            <div class="logo">⚡ ShockSimAI &bull; Enterprise Resilience OS</div>
-            <div class="meta">تقرير الاستقرار المالي واختبارات الإجهاد المؤسسي (Executive Stress Test Report)</div>
+            <div>
+                <div class="logo">⚡ ShockSimAI &bull; Enterprise Resilience OS</div>
+                <div class="meta">تقرير الاستقرار المالي واختبارات الإجهاد المؤسسي (Executive Stress Test Report)</div>
+            </div>
         </div>
 
         <div class="card-box">
@@ -221,9 +230,8 @@ def generate_executive_pdf(company, tier, mode, scenario, nodes_count, damage_va
     </body>
     </html>
     """
-    pdf_filename = f"ShockSimAI_Report_{company.replace(' ', '_')}.pdf"
-    HTML(string=html_content).write_pdf(pdf_filename)
-    return pdf_filename
+    b64 = base64.b64encode(html_content.encode("utf-8")).decode("utf-8")
+    return f'<a href="data:text/html;base64,{b64}" download="ShockSimAI_Report_{company.replace(" ", "_")}.html" target="_blank" style="display:inline-block;background:#0f172a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;">📥 تحميل التقرير التنفيذي المعتمد (HTML/PDF Ready)</a>'
 
 # ==========================================
 # الشريط الجانبي (Sidebar)
@@ -384,7 +392,7 @@ else:
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- لوحة مقارنة السيناريوهات المتعددة ---
+            # --- لوحة مقارنة السيناريوهات الكبرى ---
             st.markdown("### 📊 لوحة مقارنة السيناريوهات الكبرى (Scenario Comparison Matrix)")
             scenarios_comparison_data = {
                 "سيناريو الكارثة": [
@@ -417,11 +425,11 @@ else:
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- قسم التقرير التنفيذي الرسمي بصيغة PDF الاحترافية ---
-            st.markdown("### 📄 التقرير التنفيذي لمجلس الإدارة (Executive PDF Report)")
-            st.success("✨ ميزة جديدة: توليد تقرير مؤسسي منسق وجاهز للطباعة والاعتماد من الإدارة العليا.")
+            # --- قسم التقرير التنفيذي الرسمي المعتمد ---
+            st.markdown("### 📄 التقرير التنفيذي لمجلس الإدارة (Enterprise Report)")
+            st.success("✨ تقرير مؤسسي جاهز للتصدير والطباعة والاعتماد الإداري:")
             
-            pdf_path = generate_executive_pdf(
+            report_download_html = create_downloadable_report(
                 company=company_input,
                 tier=org_tier,
                 mode="موسم الذروة (Peak Season Mode)" if peak_season_mode else "الأيام الاعتيادية (Normal Operations)",
@@ -429,14 +437,7 @@ else:
                 nodes_count=total_nodes,
                 damage_val=calculated_damage
             )
-            
-            with open(pdf_path, "rb") as pdf_file:
-                st.download_button(
-                    label="📥 تحميل التقرير التنفيذي المعتمد (Enterprise PDF)",
-                    data=pdf_file,
-                    file_name=pdf_path,
-                    mime="application/pdf"
-                )
+            st.markdown(report_download_html, unsafe_allow_html=True)
             
             st.markdown("<br>", unsafe_allow_html=True)
             
@@ -459,4 +460,4 @@ else:
                 st.success(f"🎉 تمت محاكاة صدمات موسم الذروة بنجاح وتحديث كافة المؤشرات وجداول المقارنة التشغيلية!")
     else:
         st.info("💡 يرجى تفعيل خيار البيانات التجريبية أو رفع الملف من القائمة الجانبية.")
-                
+            
