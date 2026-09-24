@@ -3,3 +3,4 @@ pandas
 numpy
 networkx
 plotly
+psycopg2-binary
