@@ -339,7 +339,7 @@ RECOMMENDATIONS:
             lat_col = next((col for col in df.columns if col.lower() in ['lat', 'latitude']), None)
             lon_col = next((col for col in df.columns if col.lower() in ['lon', 'longitude', 'long']), None)
 
-.       if lat_col and lon_col:
+        if lat_col and lon_col:
                 st.map(df, latitude=lat_col, longitude=lon_col, size=50, color='#dc2626' if peak_season_mode else '#4f46e5')
             else:
                 st.info("💡 الملف المرفوع لا يحتوي على أعمدة إحداثيات جغرافية واضحة.")
