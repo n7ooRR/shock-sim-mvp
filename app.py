@@ -2,11 +2,6 @@ import streamlit as st
 import pandas as pd
 import psycopg2
 import datetime
-from io import BytesIO
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
 
 # إعدادات الصفحة الأساسية
 st.set_page_config(page_title="ShockSimAI — Enterprise Resilience OS", layout="wide", page_icon="⚡")
@@ -113,83 +108,6 @@ def get_organization_tier(org_name: str) -> str:
             conn.close()
     
     return "growth"
-
-# ==========================================
-# وظيفة توليد تقارير PDF الاحترافية
-# ==========================================
-def generate_pdf_report(company_name, tier, scenario, total_nodes, calculated_damage):
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
-    elements = []
-    
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        'TitleStyle',
-        parent=styles['Heading1'],
-        fontName='Helvetica-Bold',
-        fontSize=18,
-        textColor=colors.HexColor('#0f172a'),
-        spaceAfter=6
-    )
-    subtitle_style = ParagraphStyle(
-        'SubtitleStyle',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=10,
-        textColor=colors.HexColor('#64748b'),
-        spaceAfter=15
-    )
-    heading_style = ParagraphStyle(
-        'HeadingStyle',
-        parent=styles['Heading2'],
-        fontName='Helvetica-Bold',
-        fontSize=12,
-        textColor=colors.HexColor('#1e293b'),
-        spaceBefore=10,
-        spaceAfter=6
-    )
-    body_style = ParagraphStyle(
-        'BodyStyle',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=10,
-        textColor=colors.HexColor('#334155'),
-        spaceAfter=6
-    )
-
-    # محتوى الـ PDF
-    elements.append(Paragraph("ShockSimAI — Executive Stress Test Report", title_style))
-    elements.append(Paragraph(f"Generated for: {company_name} | Tier: {tier.upper()} | Date: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}", subtitle_style))
-    
-    elements.append(Paragraph("1. Summary Metrics", heading_style))
-    data = [
-        ["Metric Description", "Value"],
-        ["Active Scenario", scenario],
-        ["Total Network Nodes", str(total_nodes)],
-        ["Simulated Financial Damage", f"${calculated_damage}M"],
-        ["System Cloud Status", "Secure & Connected (Supabase PostgreSQL)"]
-    ]
-    
-    t = Table(data, colWidths=[250, 250])
-    t.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (1, 0), colors.HexColor('#f1f5f9')),
-        ('TEXTCOLOR', (0, 0), (1, 0), colors.HexColor('#0f172a')),
-        ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
-    ]))
-    elements.append(t)
-    elements.append(Spacer(1, 15))
-    
-    elements.append(Paragraph("2. Strategic AI Recommendations", heading_style))
-    elements.append(Paragraph("• <b>Supply Chain Rerouting:</b> Shift shipping flows through alternative secondary suppliers to bypass critical node shocks.", body_style))
-    elements.append(Paragraph("• <b>Safety Stock Buffer:</b> Increase safety stock levels by 25% across regional distribution depots to mitigate lead-time delays.", body_style))
-    elements.append(Paragraph("• <b>Vendor Risk Auditing:</b> Conduct rigorous stress tests on high-risk nodes identified in the supply network map.", body_style))
-    
-    doc.build(elements)
-    buffer.seek(0)
-    return buffer.getvalue()
 
 # ==========================================
 # الشريط الجانبي (Sidebar)
@@ -321,9 +239,9 @@ else:
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- ميزة مقارنة السيناريوهات جنباً إلى جنب (Side-by-Side Comparison) ---
+            # --- ميزة مقارنة السيناريوهات المتعددة (Side-by-Side Comparison) ---
             st.markdown("### 📊 لوحة مقارنة السيناريوهات المتعددة (Scenario Comparison Matrix)")
-            st.info("💡 قارن أدناه التأثير المالي المتوقع لجميع السيناريوهات الكبرى في نفس اللحظة لاختيار استراتيجية الدفاع المناسبة:")
+            st.info("💡 مقارنة فورية للتأثير المالي المتوقع لجميع السيناريوهات الكبرى في نفس اللحظة:")
             
             scenarios_comparison_data = {
                 "سيناريو الكارثة": [
@@ -356,21 +274,10 @@ else:
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- قسم تصدير التقارير (PDF احترافي أو TXT) ---
-            st.markdown("### 📄 التقارير الرسمية لمجلس الإدارة (Executive Reports)")
+            # --- قسم التقرير التنفيذي الرسمي مع دعم ترميز العربية بامتياز ---
+            st.markdown("### 📄 التقرير التنفيذي لمجلس الإدارة (Executive Report)")
             
-            pdf_bytes = generate_pdf_report(company_input, org_tier, selected_scenario, total_nodes, calculated_damage)
-            
-            col_d1, col_d2 = st.columns(2)
-            with col_d1:
-                st.download_button(
-                    label="📥 تحميل التقرير الرسمي بصيغة PDF (Recommended)",
-                    data=pdf_bytes,
-                    file_name=f"ShockSimAI_Report_{company_input.replace(' ', '_')}.pdf",
-                    mime="application/pdf"
-                )
-            with col_d2:
-                report_text = f"""==================================================
+            report_text = f"""==================================================
         SHOCKSIMAI — EXECUTIVE STRESS TEST REPORT
 ==================================================
 Company Name: {company_input}
@@ -388,12 +295,12 @@ RECOMMENDATIONS:
 2. Increase safety stock levels across distribution depots.
 ==================================================
 """
-                st.download_button(
-                    label="📥 تحميل التقرير النصي السريع (TXT Report)",
-                    data=report_text.encode("utf-8-sig"),
-                    file_name=f"ShockSimAI_Report_{company_input.replace(' ', '_')}.txt",
-                    mime="text/plain;charset=utf-8"
-                )
+            st.download_button(
+                label="📥 تحميل التقرير التنفيذي الرسمي (TXT Report)",
+                data=report_text.encode("utf-8-sig"),
+                file_name=f"ShockSimAI_Report_{company_input.replace(' ', '_')}.txt",
+                mime="text/plain;charset=utf-8"
+            )
             
             st.markdown("<br>", unsafe_allow_html=True)
             
@@ -413,7 +320,7 @@ RECOMMENDATIONS:
             st.dataframe(df, use_container_width=True)
             
             if run_simulation:
-                st.success(f"🎉 تم تشغيل المحاكاة بنجاح لسيناريو ({selected_scenario}) وتحديث كافة التقارير التحليلية وجدول المقارنة!")
+                st.success(f"🎉 تم تشغيل المحاكاة بنجاح لسيناريو ({selected_scenario}) وتحديث كافة التقارير ومصفوفة المقارنة!")
     else:
         st.info("💡 يرجى تفعيل خيار البيانات التجريبية أو رفع الملف من القائمة الجانبية.")
-            
+        
