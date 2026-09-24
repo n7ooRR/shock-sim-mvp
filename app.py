@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import psycopg2
 import datetime
+import os
+from weasyprint import HTML
 
 # إعدادات الصفحة الأساسية
 st.set_page_config(page_title="ShockSimAI — Enterprise Resilience OS", layout="wide", page_icon="⚡")
@@ -110,6 +112,120 @@ def get_organization_tier(org_name: str) -> str:
     return "growth"
 
 # ==========================================
+# وظيفة توليد التقرير الاحترافي بصيغة PDF
+# ==========================================
+def generate_executive_pdf(company, tier, mode, scenario, nodes_count, damage_val):
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            @page {{
+                size: A4;
+                margin: 20mm;
+                background-color: #ffffff;
+            }}
+            body {{
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                color: #1e293b;
+                line-height: 1.6;
+                font-size: 12pt;
+            }}
+            .header {{
+                border-bottom: 3px solid #0f172a;
+                padding-bottom: 15px;
+                margin-bottom: 25px;
+            }}
+            .logo {{
+                font-size: 22pt;
+                font-weight: bold;
+                color: #0f172a;
+            }}
+            .meta {{
+                font-size: 10pt;
+                color: #64748b;
+                margin-top: 5px;
+            }}
+            h2 {{
+                color: #0f172a;
+                border-bottom: 1px solid #e2e8f0;
+                padding-bottom: 5px;
+                margin-top: 20px;
+                font-size: 14pt;
+            }}
+            .card-box {{
+                background-color: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 15px;
+            }}
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 15px;
+                margin-bottom: 20px;
+            }}
+            th, td {{
+                border: 1px solid #cbd5e1;
+                padding: 10px;
+                text-align: right;
+                font-size: 10pt;
+            }}
+            th {{
+                background-color: #f1f5f9;
+                color: #0f172a;
+            }}
+            .footer {{
+                margin-top: 40px;
+                border-top: 1px solid #e2e8f0;
+                padding-top: 10px;
+                font-size: 9pt;
+                color: #94a3b8;
+                text-align: center;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <div class="logo">⚡ ShockSimAI &bull; Enterprise Resilience OS</div>
+            <div class="meta">تقرير الاستقرار المالي واختبارات الإجهاد المؤسسي (Executive Stress Test Report)</div>
+        </div>
+
+        <div class="card-box">
+            <p><b>اسم المؤسسة:</b> {company}</p>
+            <p><b>الباقة المعتمدة:</b> {tier.upper()}</p>
+            <p><b>النمط التشغيلي:</b> {mode}</p>
+            <p><b>السيناريو الرئيسي:</b> {scenario}</p>
+            <p><b>تاريخ الإصدار:</b> {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+        </div>
+
+        <h2>الملخص التنفيذي للأضرار</h2>
+        <div class="card-box">
+            <p><b>إجمالي عدد عقد الشبكة المستهدفة:</b> {nodes_count} عقدة</p>
+            <p><b>الضرر المالي المحاكى:</b> ${damage_val} مليون دولار</p>
+            <p><b>حالة النظام:</b> تم التحقق عبر قاعدة بيانات Supabase المشفرة الآمنة.</p>
+        </div>
+
+        <h2>التوصيات الاستراتيجية للحد من المخاطر</h2>
+        <ul>
+            <li>رفع مخزون الطوارئ والاحتياطيات الاستراتيجية بنسبة تتناسب مع نمط التشغيل الحالي لتجنب الاختناقات اللوجستية.</li>
+            <li>تفعيل خطط السيولة المالية البديلة لامتصاص الصدمات المفاجئة وتقليل العجز المحتمل بمقدار 30%.</li>
+            <li>تحديث بروتوكولات إدارة الأزمات لمجلس الإدارة والجهات الرقابية بشكل دوري.</li>
+        </ul>
+
+        <div class="footer">
+            وثيقة رسمية صادرة إلكترونياً من منصة ShockSimAI المؤسسية. جميع الحقوق محفوظة © {datetime.datetime.now().year}
+        </div>
+    </body>
+    </html>
+    """
+    pdf_filename = f"ShockSimAI_Report_{company.replace(' ', '_')}.pdf"
+    HTML(string=html_content).write_pdf(pdf_filename)
+    return pdf_filename
+
+# ==========================================
 # الشريط الجانبي (Sidebar)
 # ==========================================
 st.sidebar.markdown("### 🔐 بوابة المؤسسات")
@@ -204,7 +320,6 @@ else:
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("### 🔮 محرك محاكاة مونت كارلو")
             
-            # أزرار اختيار واضحة ومضمونة الاستجابة على الجوال
             simulation_choice = st.radio(
                 "اختر وضع المحاكاة:",
                 ["وضع المراقبة العادي (Normal View)", "تشغيل محاكاة الصدمات بالذكاء الاصطناعي (Run AI Stress Test) 🔥"],
@@ -302,34 +417,26 @@ else:
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- قسم التقرير التنفيذي الرسمي ---
-            st.markdown("### 📄 التقرير التنفيذي لمجلس الإدارة (Executive Report)")
+            # --- قسم التقرير التنفيذي الرسمي بصيغة PDF الاحترافية ---
+            st.markdown("### 📄 التقرير التنفيذي لمجلس الإدارة (Executive PDF Report)")
+            st.success("✨ ميزة جديدة: توليد تقرير مؤسسي منسق وجاهز للطباعة والاعتماد من الإدارة العليا.")
             
-            report_text = f"""==================================================
-        SHOCKSIMAI — EXECUTIVE STRESS TEST REPORT
-==================================================
-Company Name: {company_input}
-Tier: {org_tier.upper()}
-Operational Mode: {'Peak Season Mode' if peak_season_mode else 'Normal Operations'}
-Date: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-Selected Scenario: {selected_scenario}
---------------------------------------------------
-SUMMARY METRICS:
-- Total Network Nodes: {total_nodes}
-- Simulated Financial Damage: ${calculated_damage}M
-- System Status: Secure & Connected (Supabase PostgreSQL)
---------------------------------------------------
-RECOMMENDATIONS:
-1. Activate emergency logistics buffers for peak load.
-2. Increase safety stock levels across distribution depots.
-==================================================
-"""
-            st.download_button(
-                label="📥 تحميل التقرير التنفيذي الرسمي (TXT Report)",
-                data=report_text.encode("utf-8-sig"),
-                file_name=f"ShockSimAI_Report_{company_input.replace(' ', '_')}.txt",
-                mime="text/plain;charset=utf-8"
+            pdf_path = generate_executive_pdf(
+                company=company_input,
+                tier=org_tier,
+                mode="موسم الذروة (Peak Season Mode)" if peak_season_mode else "الأيام الاعتيادية (Normal Operations)",
+                scenario=selected_scenario,
+                nodes_count=total_nodes,
+                damage_val=calculated_damage
             )
+            
+            with open(pdf_path, "rb") as pdf_file:
+                st.download_button(
+                    label="📥 تحميل التقرير التنفيذي المعتمد (Enterprise PDF)",
+                    data=pdf_file,
+                    file_name=pdf_path,
+                    mime="application/pdf"
+                )
             
             st.markdown("<br>", unsafe_allow_html=True)
             
@@ -352,4 +459,4 @@ RECOMMENDATIONS:
                 st.success(f"🎉 تمت محاكاة صدمات موسم الذروة بنجاح وتحديث كافة المؤشرات وجداول المقارنة التشغيلية!")
     else:
         st.info("💡 يرجى تفعيل خيار البيانات التجريبية أو رفع الملف من القائمة الجانبية.")
-        
+                
