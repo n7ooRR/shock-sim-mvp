@@ -135,7 +135,7 @@ else:
     }
     
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🎛️ سيناريوهات الصدمات (Stress Scenarios)")
+    st.sidebar.markdown("### 🎛️ سيناريوهات الصدمات والذروة")
     selected_scenario = st.sidebar.selectbox(
         "اختر سيناريو الكارثة الرئيسي:",
         [
@@ -144,6 +144,9 @@ else:
             "أزمة طاقة حادة وارتفاع تكاليف التشغيل"
         ]
     )
+
+    # ميزة أوقات الذروة الجديدة في الشريط الجانبي
+    peak_season_mode = st.sidebar.checkbox("🔥 تفعيل وضع موسم الذروة (Peak Season Mode)", value=False)
 
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 📊 مدخلات الشبكة")
@@ -170,10 +173,11 @@ else:
     # ==========================================
     # واجهة العرض الرئيسية (Main Frontend UI)
     # ==========================================
+    mode_label = "موسم الذروة (Peak Season Active) 🔥" if peak_season_mode else "الأيام الاعتيادية (Normal Operations) 🟢"
     st.markdown(f"""
         <div class="main-header">
             <h1 class="main-title">⚡ ShockSimAI</h1>
-            <p class="main-subtitle">Enterprise OS &bull; <b>{company_input}</b> ({org_tier.upper()}) &bull; السيناريو النشط: {selected_scenario}</p>
+            <p class="main-subtitle">Enterprise OS &bull; <b>{company_input}</b> ({org_tier.upper()}) &bull; النمط التشغيلي: {mode_label} &bull; السيناريو: {selected_scenario}</p>
         </div>
     """, unsafe_allow_html=True)
 
@@ -196,19 +200,22 @@ else:
             elif "أزمة طاقة" in selected_scenario:
                 multiplier = 1.28
 
+            # تطبيق مضاعف الذروة إذا تم تفعيله (مثلاً زيادة الضرر بنسبة 45% في أوقات الذروة)
+            peak_multiplier = 1.45 if peak_season_mode else 1.0
+
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("### 🔮 محرك محاكاة مونت كارلو")
             
             run_simulation = st.toggle("🚀 تشغيل محاكاة الصدمات بالذكاء الاصطناعي (Monte Carlo Stress Test)")
 
             if run_simulation:
-                calculated_damage = round(base_damage * multiplier, 1)
-                delta_text = f"⚠️ تأثير سيناريو نشط"
+                calculated_damage = round(base_damage * multiplier * peak_multiplier, 1)
+                delta_text = f"⚠️ تأثير سيناريو {'(في موسم الذروة)' if peak_season_mode else ''}"
                 status_color = "#dc2626"
             else:
-                calculated_damage = base_damage
-                delta_text = "↓ -4.2% مقارنة بالربع السابق"
-                status_color = "#059669"
+                calculated_damage = round(base_damage * peak_multiplier, 1)
+                delta_text = "🔥 وضع الذروة مفعل" if peak_season_mode else "↓ -4.2% مقارنة بالربع السابق"
+                status_color = "#dc2626" if peak_season_mode else "#059669"
 
             # عرض المؤشرات الثلاثة
             col1, col2, col3 = st.columns(3)
@@ -231,18 +238,33 @@ else:
             with col3:
                 st.markdown(f"""
                     <div class="metric-card">
-                        <div class="metric-title">حالة النظام السحابي</div>
-                        <div class="metric-value" style="font-size: 1.3rem;">متصل 🟢</div>
+                        <div class="metric-title">النمط التشغيلي الحالي</div>
+                        <div class="metric-value" style="font-size: 1.2rem;">{"موسم الذروة 🔥" if peak_season_mode else "عادي 🟢"}</div>
                         <div class="metric-delta">Supabase Secure PostgreSQL</div>
                     </div>
                 """, unsafe_allow_html=True)
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- ميزة مقارنة السيناريوهات المتعددة (Side-by-Side Comparison) ---
-            st.markdown("### 📊 لوحة مقارنة السيناريوهات المتعددة (Scenario Comparison Matrix)")
-            st.info("💡 مقارنة فورية للتأثير المالي المتوقع لجميع السيناريوهات الكبرى في نفس اللحظة:")
+            # --- مقارنة الأداء بين الأيام العادية وأيام الذروة ---
+            st.markdown("### 📈 مقارنة التأثير التشغيلي (Normal vs. Peak Season Analysis)")
+            st.info("💡 جدول تحليلي يوضح حجم الخسائر المالية المتوقعة بين الأيام الاعتيادية ومواسم الذروة تحت نفس السيناريو:")
             
+            normal_damage_calc = round(base_damage * multiplier, 1)
+            peak_damage_calc = round(base_damage * multiplier * 1.45, 1)
+            
+            comparison_season_data = {
+                "النمط التشغيلي": ["الأيام الاعتيادية (Normal Days)", "موسم الذروة (Peak Season Mode)"],
+                "مضاعف الحمل": ["1.0x", "1.45x (طاقة قصوى)"],
+                "الضرر المتوقع للمحاكاة": [f"${normal_damage_calc}M", f"${peak_damage_calc}M"],
+                "مستوى الجاهزية المطلوبة": ["متوسط", "طوارئ قصوى ⚠️"]
+            }
+            st.dataframe(pd.DataFrame(comparison_season_data), use_container_width=True)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # --- لوحة مقارنة السيناريوهات المتعددة ---
+            st.markdown("### 📊 لوحة مقارنة السيناريوهات الكبرى (Scenario Comparison Matrix)")
             scenarios_comparison_data = {
                 "سيناريو الكارثة": [
                     "أزمة جيوسياسية وعقوبات تجارية (-30%)",
@@ -250,10 +272,10 @@ else:
                     "أزمة طاقة حادة وارتفاع تكاليف التشغيل"
                 ],
                 "مضاعف الأثر": ["1.42x", "1.65x", "1.28x"],
-                "الضرر المالي المحسوب": [
-                    f"${round(base_damage * 1.42, 1)}M",
-                    f"${round(base_damage * 1.65, 1)}M",
-                    f"${round(base_damage * 1.28, 1)}M"
+                "الضرر المالي (بناءً على النمط الحالي)": [
+                    f"${round(base_damage * 1.42 * peak_multiplier, 1)}M",
+                    f"${round(base_damage * 1.65 * peak_multiplier, 1)}M",
+                    f"${round(base_damage * 1.28 * peak_multiplier, 1)}M"
                 ],
                 "مستوى الخطورة": ["حرج جداً", "كارثي", "متوسط - عالي"]
             }
@@ -265,16 +287,16 @@ else:
             st.markdown("### 🤖 مساعد الذكاء الاصطناعي الاستراتيجي (AI Mitigation Advisor)")
             if run_simulation:
                 st.info(f"""
-                💡 **توصيات الذكاء الاصطناعي للسيناريو الحالي ({selected_scenario}):**
-                * **تحويل الشحنات:** نقترح تحويل تدفق الشحنات عبر المورد البديل لتفادي صدمات العقد الحرجة وتقليل الخسائر بنحو **${round(calculated_damage * 0.25, 1)}M**.
-                * **رفع مخزون الطوارئ:** زيادة مخزون الأمان بنسبة 25% في المراكز الآمنة.
+                💡 **توصيات الذكاء الاصطناعي للوضع الحالي ({'موسم الذروة' if peak_season_mode else 'الأيام الاعتيادية'}):**
+                * **إدارة الضغط:** نظراً لتشغيل الشبكة {'بأقصى طاقة استيعابية' if peak_season_mode else 'بمعدلات طبيعية'}, نقترح رفع مخزون الطوارئ بنسبة {'40%' if peak_season_mode else '25%'} وتفعيل خطط الإسناد السريع لتجنب اختناقات الموانئ.
+                * **توفير السيولة البديلة:** تجهيز خطوط تمويل إضافية لتقليل تأثير الصدمة المالية بمقدار **${round(calculated_damage * 0.3, 1)}M**.
                 """)
             else:
                 st.warning("ℹ️ يرجى تفعيل محاكاة الصدمات أعلاه لعرض خطط الاستجابة والتوصيات الاستراتيجية المخصصة.")
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- قسم التقرير التنفيذي الرسمي مع دعم ترميز العربية بامتياز ---
+            # --- قسم التقرير التنفيذي الرسمي ---
             st.markdown("### 📄 التقرير التنفيذي لمجلس الإدارة (Executive Report)")
             
             report_text = f"""==================================================
@@ -282,6 +304,7 @@ else:
 ==================================================
 Company Name: {company_input}
 Tier: {org_tier.upper()}
+Operational Mode: {'Peak Season Mode' if peak_season_mode else 'Normal Operations'}
 Date: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 Selected Scenario: {selected_scenario}
 --------------------------------------------------
@@ -291,7 +314,7 @@ SUMMARY METRICS:
 - System Status: Secure & Connected (Supabase PostgreSQL)
 --------------------------------------------------
 RECOMMENDATIONS:
-1. Activate alternative suppliers for high-risk nodes.
+1. Activate emergency logistics buffers for peak load.
 2. Increase safety stock levels across distribution depots.
 ==================================================
 """
@@ -311,7 +334,7 @@ RECOMMENDATIONS:
             lon_col = next((col for col in df.columns if col.lower() in ['lon', 'longitude', 'long']), None)
 
             if lat_col and lon_col:
-                st.map(df, latitude=lat_col, longitude=lon_col, size=50, color='#4f46e5')
+                st.map(df, latitude=lat_col, longitude=lon_col, size=50, color='#dc2626' if peak_season_mode else '#4f46e5')
             else:
                 st.info("💡 الملف المرفوع لا يحتوي على أعمدة إحداثيات جغرافية واضحة.")
             
@@ -320,7 +343,7 @@ RECOMMENDATIONS:
             st.dataframe(df, use_container_width=True)
             
             if run_simulation:
-                st.success(f"🎉 تم تشغيل المحاكاة بنجاح لسيناريو ({selected_scenario}) وتحديث كافة التقارير ومصفوفة المقارنة!")
+                st.success(f"🎉 تمت محاكاة صدمات موسم الذروة بنجاح وتحديث كافة المؤشرات وجداول المقارنة التشغيلية!")
     else:
         st.info("💡 يرجى تفعيل خيار البيانات التجريبية أو رفع الملف من القائمة الجانبية.")
-        
+            
