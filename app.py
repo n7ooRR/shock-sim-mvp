@@ -5,7 +5,7 @@ import psycopg2
 # إعدادات الصفحة الأساسية
 st.set_page_config(page_title="ShockSimAI — Enterprise Resilience OS", layout="wide", page_icon="⚡")
 
-# تصميم Frontend احترافي مخصص بالكامل (Custom Enterprise CSS)
+# تصميم Frontend احترافي مخصص بالكامل (مع إصلاح ألوان النصوص الجانبية)
 st.markdown("""
 <style>
     /* تغيير خلفية التطبيق بالكامل إلى وضع مظلم مؤسسي فاخر */
@@ -15,18 +15,18 @@ st.markdown("""
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
-    /* إخفاء القوائم العلوية والسفلية الافتراضية لستريمليت لإعطاء مظهر تطبيق حقيقي */
+    /* إخفاء القوائم العلوية والسفلية الافتراضية لستريمليت */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
-    /* تخصيص الشريط الجانبي (Sidebar) */
+    /* تخصيص الشريط الجانبي بالكامل لضمان وضوح النصوص */
     [data-testid="stSidebar"] {
         background-color: #111827;
         border-right: 1px solid #1f2937;
     }
-    [data-testid="stSidebar"] label, [data-testid="stSidebar"] span, [data-testid="stSidebar"] p {
-        color: #e5e7eb !important;
+    [data-testid="stSidebar"] div, [data-testid="stSidebar"] span, [data-testid="stSidebar"] p, [data-testid="stSidebar"] label {
+        color: #f3f4f6 !important;
     }
 
     /* بطاقات المؤشرات الاحترافية (Metrics Cards) */
@@ -35,12 +35,8 @@ st.markdown("""
         border: 1px solid #374151;
         padding: 24px;
         border-radius: 14px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         transition: all 0.3s ease;
-    }
-    .metric-card:hover {
-        border-color: #6366f1;
-        box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.2);
     }
     .metric-title {
         font-size: 0.875rem;
@@ -81,7 +77,7 @@ st.markdown("""
         margin-top: 5px;
     }
 
-    /* تخصيص الأزرار لتكون عصرية وفخمة */
+    /* تخصيص الأزرار */
     .stButton>button {
         width: 100%;
         background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
@@ -91,11 +87,9 @@ st.markdown("""
         font-weight: 600;
         border-radius: 10px;
         box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-        transition: all 0.3s ease;
     }
     .stButton>button:hover {
         background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
-        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
         color: white;
     }
 </style>
@@ -161,7 +155,8 @@ else:
     
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 📊 مدخلات الشبكة")
-    use_demo = st.sidebar.checkbox("استخدام شبكة إمداد تجريبية (Demo Data)", value=False)
+    # جعل الديمو مفعل افتراضياً لضمان ظهور المؤشرات فوراً
+    use_demo = st.sidebar.checkbox("استخدام شبكة إمداد تجريبية (Demo Data)", value=True)
     uploaded_file = st.sidebar.file_uploader("رفع ملف شبكة (CSV أو TXT)", type=["csv", "txt"])
     
     df = None
@@ -178,7 +173,6 @@ else:
             "risk_score": [0.2, 0.5, 0.8, 0.3, 0.6, 0.4]
         }
         df = pd.DataFrame(demo_data)
-        st.sidebar.info("📌 يتم استخدام الشبكة الافتراضية التجريبية.")
 
     # ==========================================
     # واجهة العرض الرئيسية (Main Frontend UI)
@@ -197,7 +191,6 @@ else:
         if total_nodes > allowed_limit:
             st.error(f"⚠️ عذراً، شبكتك تحتوي على {total_nodes} عقدة، بينما الحد الأقصى لباقة (**{org_tier}**) هو {allowed_limit} عقدة.")
         else:
-            # حساب الضرر ديناميكياً
             if 'risk_score' in df.columns:
                 total_risk_factor = df['risk_score'].sum()
                 calculated_damage = round(total_risk_factor * 125.4, 1)
