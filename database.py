@@ -78,4 +78,4 @@ def get_event_history_df():
     df = pd.read_sql_query("SELECT * FROM event_history ORDER BY timestamp DESC", conn)
     conn.close()
     return df
-  
+    
