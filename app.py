@@ -6,7 +6,7 @@ import datetime
 # إعدادات الصفحة الأساسية
 st.set_page_config(page_title="ShockSimAI — Enterprise Resilience OS", layout="wide", page_icon="⚡")
 
-# تصميم Frontend بالوضع الفاتح مع كافة المميزات الاستراتيجية
+# تصميم Frontend بالوضع الفاتح
 st.markdown("""
 <style>
     .stApp {
@@ -184,12 +184,13 @@ else:
         if total_nodes > allowed_limit:
             st.error(f"⚠️ تجاوزت الحد الأقصى لباقة {org_tier}.")
         else:
-            if 'risk_score' in df.columns:
-                base_damage = round(df['risk_score'].sum() * 125.4, 1)
+            # البحث عن عمود المخاطر بمرونة أيضاً
+            risk_col = next((col for col in df.columns if 'risk' in col.lower()), None)
+            if risk_col:
+                base_damage = round(df[risk_col].sum() * 125.4, 1)
             else:
                 base_damage = round(total_nodes * 92.5, 1)
             
-            # مضاعف التأثير بناءً على السيناريو المختار
             multiplier = 1.42
             if "إغلاق ميناء" in selected_scenario:
                 multiplier = 1.65
@@ -203,7 +204,7 @@ else:
 
             if run_simulation:
                 calculated_damage = round(base_damage * multiplier, 1)
-                delta_text = f"⚠️ تأثير سيناريو: {selected_scenario[:20]}..."
+                delta_text = f"⚠️ تأثير سيناريو نشط"
                 status_color = "#dc2626"
             else:
                 calculated_damage = base_damage
@@ -239,7 +240,7 @@ else:
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- ميزة مساعد الذكاء الاصطناعي الاستراتيجي ---
+            # مساعدة الذكاء الاصطناعي
             st.markdown("### 🤖 مساعد الذكاء الاصطناعي الاستراتيجي (AI Mitigation Advisor)")
             if run_simulation:
                 st.info(f"""
@@ -252,10 +253,9 @@ else:
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- ميزة توليد تقرير التنفيذيين (Executive Report Generator) ---
+            # التقرير التنفيذي مع ترميز UTF-8 الصحيح للعربية
             st.markdown("### 📄 التقرير التنفيذي لمجلس الإدارة (Executive Report)")
-            report_text = f"""
-==================================================
+            report_text = f"""==================================================
         SHOCKSIMAI — EXECUTIVE STRESS TEST REPORT
 ==================================================
 Company Name: {company_input}
@@ -272,22 +272,28 @@ RECOMMENDATIONS:
 1. Activate alternative suppliers for high-risk nodes.
 2. Increase safety stock levels across distribution depots.
 ==================================================
-            """
+"""
+            report_bytes = report_text.encode("utf-8-sig")
+
             st.download_button(
                 label="📥 تحميل التقرير التنفيذي الرسمي (TXT Report)",
-                data=report_text,
+                data=report_bytes,
                 file_name=f"ShockSimAI_Report_{company_input.replace(' ', '_')}.txt",
-                mime="text/plain"
+                mime="text/plain;charset=utf-8"
             )
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # قسم الخريطة الجغرافية الحية
+            # --- قسم الخريطة الجغرافية مع الكشف الذكي عن أسماء الأعمدة ---
             st.markdown("### 🗺️ الخريطة الجغرافية الحية لعقد الشبكة (Supply Chain Map)")
-            if 'lat' in df.columns and 'lon' in df.columns:
-                st.map(df, latitude='lat', longitude='lon', size=50, color='#4f46e5')
+            
+            lat_col = next((col for col in df.columns if col.lower() in ['lat', 'latitude']), None)
+            lon_col = next((col for col in df.columns if col.lower() in ['lon', 'longitude', 'long']), None)
+
+            if lat_col and lon_col:
+                st.map(df, latitude=lat_col, longitude=lon_col, size=50, color='#4f46e5')
             else:
-                st.info("💡 الملف المرفوع لا يحتوي على إحداثيات جغرافية (lat, lon).")
+                st.info("💡 الملف المرفوع لا يحتوي على أعمدة إحداثيات جغرافية واضحة (lat/latitude أو lon/longitude).")
             
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("### 📋 جدول البيانات التحليلية للعقد")
@@ -297,4 +303,4 @@ RECOMMENDATIONS:
                 st.success(f"🎉 تم تشغيل المحاكاة بنجاح لسيناريو ({selected_scenario}) وتحديث كافة التقارير التحليلية!")
     else:
         st.info("💡 يرجى تفعيل خيار البيانات التجريبية أو رفع الملف من القائمة الجانبية.")
-            
+        
