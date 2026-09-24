@@ -9,21 +9,19 @@ st.set_page_config(page_title="ShockSimAI - Enterprise Resilience OS", layout="w
 # وظائف قاعدة البيانات السحابية (Supabase)
 # ==========================================
 def get_db_connection():
-    """الحصول على اتصال بقاعدة بيانات Supabase PostgreSQL السحابية"""
     database_url = st.secrets.get("DATABASE_URL")
     if not database_url:
         return None
     try:
         conn = psycopg2.connect(database_url)
         return conn
-    except Exception as e:
+    except Exception:
         return None
 
 def get_organization_tier(org_name: str) -> str:
-    """جلب باقة الشركة النشطة من قاعدة البيانات السحابية"""
     conn = get_db_connection()
     if not conn:
-        return "growth" # قيمة افتراضية في حال التباين لضمان عمل التجربة
+        return "growth"
     
     try:
         cursor = conn.cursor()
@@ -76,27 +74,47 @@ else:
     
     st.sidebar.markdown("---")
     st.sidebar.subheader("📊 بيانات الشبكة والسيناريو")
-    uploaded_file = st.sidebar.file_uploader("رفع ملف شبكة الإمداد (CSV)", type=["csv"])
     
+    # خيار استخدام بيانات تجريبية افتراضية بضغطة زر
+    use_demo = st.sidebar.checkbox("استخدام شبكة إمداد تجريبية (Demo Data)", value=True)
+    
+    uploaded_file = st.sidebar.file_uploader("أو رفع ملف شبكة (CSV أو TXT)", type=["csv", "txt"])
+    
+    df = None
     if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file)
+        try:
+            df = pd.read_csv(uploaded_file)
+        except Exception:
+            df = pd.read_csv(uploaded_file, sep=None, engine='python')
+    elif use_demo:
+        # إنشاء بيانات تجريبية افتراضية للمحاكاة فوراً
+        demo_data = {
+            "node_id": [1, 2, 3, 4, 5, 6],
+            "node_name": ["Main Supplier Port", "Central Warehouse", "Distribution Hub East", "Manufacturing Plant A", "Regional Depot", "Retail Center"],
+            "type": ["Supplier", "Warehouse", "Hub", "Factory", "Depot", "Retail"],
+            "risk_score": [0.2, 0.5, 0.8, 0.3, 0.6, 0.4]
+        }
+        df = pd.DataFrame(demo_data)
+        st.sidebar.info("📌 يتم استخدام الشبكة الافتراضية التجريبية حالياً.")
+
+    if df is not None:
         total_nodes = len(df)
         allowed_limit = max_limits.get(org_tier, 500)
         
         if total_nodes > allowed_limit:
-            st.error(f"⚠️ عذراً، شبكتك تحتوي على {total_nodes} عقدة، بينما الحد الأقصى المسموح به لباقة (**{org_tier}**) هو {allowed_limit} عقدة. يرجى ترقية اشتراكك المؤسسي للمتابعة.")
+            st.error(f"⚠️ عذراً، شبكتك تحتوي على {total_nodes} عقدة، بينما الحد الأقصى المسموح به لباقة (**{org_tier}**) هو {allowed_limit} عقدة.")
         else:
-            st.success(f"✅ شبكتك مطابقة لحدود الباقة ({total_nodes}/{allowed_limit} عقدة). المحاكاة جاهزة للعمل!")
+            st.success(f"✅ الشبكة نشطة وتحتوي على {total_nodes} عقدة مطابقة لحدود باقة {org_tier}.")
             
-            # عرض لوحة التحكم الأساسية للمحاكاة
+            # لوحة المؤشرات الرئيسية
             col1, col2, col3 = st.columns(3)
             col1.metric("إجمالي الضرر المتوقع", "$517.3M", "-4.2%")
             col2.metric("عدد العقد المتأثرة", f"{total_nodes}", "حرج")
-            col3.metric("حالة قاعدة البيانات", "متصلة بنجاح 🟢")
+            col3.metric("حالة النظام السحابي", "متصل 🟢")
             
             st.markdown("### 🔮 تنبؤات مونت كارلو الاحتمالية (Monte Carlo Forecast)")
-            if st.button("تفعيل محاكاة التنبؤ الجغرافي"):
-                st.success("تم تشغيل محاكاة الصدمات بنجاح عبر سحابة Supabase!")
+            if st.button("تفعيل محاكاة الصدمات بالذكاء الاصطناعي"):
+                st.success("🎉 تمت محاكاة صدمات سلاسل الإمداد بنجاح عبر سحابة Supabase!")
     else:
-        st.info("💡 قم برفع ملف الـ CSV الخاص بشبكة الإمداد من القائمة الجانبية لبدء المحاكاة وتحليل المخاطر.")
+        st.info("💡 يرجى تفعيل خيار البيانات التجريبية أو رفع ملف الشبكة من القائمة الجانبية.")
         
