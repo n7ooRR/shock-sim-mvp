@@ -204,12 +204,15 @@ else:
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("### 🔮 محرك محاكاة مونت كارلو")
             
-            # تم استبدال الـ toggle بمربع اختيار (checkbox) لضمان الاستجابة التامة على الموبايل
-            run_simulation = st.checkbox(
-                "🚀 تشغيل محاكاة الصدمات بالذكاء الاصطناعي (Monte Carlo Stress Test)", 
-                value=False, 
-                key="simulation_checkbox_state"
+            # استبدال الـ toggle بأزرار اختيار (Radio) استجابتها مضمونة 100% على الموبايل
+            simulation_choice = st.radio(
+                "اختر وضع المحاكاة:",
+                ["وضع المراقبة العادي (Normal View)", "تشغيل محاكاة الصدمات بالذكاء الاصطناعي (Run AI Stress Test) 🔥"],
+                index=0,
+                key="simulation_radio_mode"
             )
+            
+            run_simulation = (simulation_choice == "تشغيل محاكاة الصدمات بالذكاء الاصطناعي (Run AI Stress Test) 🔥")
 
             if run_simulation:
                 calculated_damage = round(base_damage * multiplier * peak_multiplier, 1)
@@ -295,7 +298,7 @@ else:
                 * **توفير السيولة البديلة:** تجهيز خطوط تمويل إضافية لتقليل تأثير الصدمة المالية بمقدار **${round(calculated_damage * 0.3, 1)}M**.
                 """)
             else:
-                st.warning("ℹ️ يرجى تحديد مربع الاختيار أعلاه (تشغيل محاكاة الصدمات) لعرض خطط الاستجابة والتوصيات الاستراتيجية المخصصة.")
+                st.warning("ℹ️ يرجى اختيار خيار (تشغيل محاكاة الصدمات بالذكاء الاصطناعي) أعلاه لعرض خطط الاستجابة والتوصيات الاستراتيجية المخصصة.")
             
             st.markdown("<br>", unsafe_allow_html=True)
             
@@ -336,7 +339,7 @@ RECOMMENDATIONS:
             lat_col = next((col for col in df.columns if col.lower() in ['lat', 'latitude']), None)
             lon_col = next((col for col in df.columns if col.lower() in ['lon', 'longitude', 'long']), None)
 
-            if lat_col and lon_col:
+.       if lat_col and lon_col:
                 st.map(df, latitude=lat_col, longitude=lon_col, size=50, color='#dc2626' if peak_season_mode else '#4f46e5')
             else:
                 st.info("💡 الملف المرفوع لا يحتوي على أعمدة إحداثيات جغرافية واضحة.")
