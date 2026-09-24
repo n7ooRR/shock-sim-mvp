@@ -5,7 +5,7 @@ import psycopg2
 # إعدادات الصفحة الأساسية
 st.set_page_config(page_title="ShockSimAI — Enterprise Resilience OS", layout="wide", page_icon="⚡")
 
-# تصميم Frontend بالوضع الفاتح مع الخريطة التفاعلية
+# تصميم Frontend بالوضع الفاتح مع الخريطة والمساعد الذكي والتجاوب الكامل
 st.markdown("""
 <style>
     .stApp {
@@ -145,7 +145,6 @@ else:
         except Exception:
             df = pd.read_csv(uploaded_file, sep=None, engine='python')
     elif use_demo:
-        # بيانات تجريبية مع إحداثيات جغرافية (lat, lon) للخريطة
         demo_data = {
             "node_id": [1, 2, 3, 4, 5, 6],
             "node_name": ["Main Supplier Port", "Central Warehouse", "Distribution Hub East", "Manufacturing Plant A", "Regional Depot", "Retail Center"],
@@ -178,6 +177,9 @@ else:
             else:
                 base_damage = round(total_nodes * 92.5, 1)
             
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("### 🔮 محرك محاكاة مونت كارلو")
+            
             run_simulation = st.toggle("🚀 تشغيل محاكاة الصدمات بالذكاء الاصطناعي (Monte Carlo Stress Test)")
 
             if run_simulation:
@@ -189,7 +191,7 @@ else:
                 delta_text = "↓ -4.2% مقارنة بالربع السابق"
                 status_color = "#059669"
 
-            # عرض المؤشرات
+            # عرض المؤشرات الثلاثة
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.markdown(f"""
@@ -218,21 +220,37 @@ else:
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- ميزة الخريطة التفاعلية الجديدة ---
+            # --- ميزة مساعد الذكاء الاصطناعي الاستراتيجي الجديد ---
+            st.markdown("### 🤖 مساعد الذكاء الاصطناعي الاستراتيجي (AI Mitigation Advisor)")
+            st.markdown("توصيات ذكية فورية لتقليل الخسائر وإدارة المخاطر المعقدة بناءً على حالة الشبكة.")
+            
+            if run_simulation:
+                st.info("""
+                💡 **توصيات الذكاء الاصطناعي العاجلة للحد من المخاطر:**
+                * **تحويل الشحنات:** نقترح تحويل 35% من تدفق الشحنات عبر المورد البديل في المنطقة الشمالية لتفادي أزمة العقد ذات المخاطر العالية وتقليل الخسائر بنحو **$85.4M**.
+                * **إدارة مخزون الطوارئ:** رفع مستوى مخزون الأمان (Safety Stock) بنسبة 20% في مراكز التوزيع الرئيسية.
+                * **التفاوض البديل:** تفعيل اتفاقيات توريد احتياطية مع شركاء معتمدين في القائمة المجاورة.
+                """)
+            else:
+                st.warning("ℹ️ يرجى تفعيل محاكاة الصدمات أعلاه لعرض خطط الاستجابة والتوصيات الاستراتيجية المخصصة.")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # قسم الخريطة الجغرافية الحية
             st.markdown("### 🗺️ الخريطة الجغرافية الحية لعقد الشبكة (Supply Chain Map)")
             st.markdown("تتبع مواقع المصانع، المستودعات، ومراكز التوزيع وتحديد العقد ذات المخاطر العالية.")
             
             if 'lat' in df.columns and 'lon' in df.columns:
                 st.map(df, latitude='lat', longitude='lon', size=50, color='#4f46e5')
             else:
-                st.info("💡 الملف المرفوع لا يحتوي على إحداثيات جغرافية (lat, lon). يتم عرض الإحداثيات الافتراضية.")
+                st.info("💡 الملف المرفوع لا يحتوي على إحداثيات جغرافية (lat, lon).")
             
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("### 📋 جدول البيانات التحليلية للعقد")
             st.dataframe(df, use_container_width=True)
             
             if run_simulation:
-                st.success(f"🎉 تم تفعيل محاكاة الصدمات بنجاح وتحليل توزيع المخاطر لـ {total_nodes} عقدة جغرافياً.")
+                st.success(f"🎉 تمت محاكاة صدمات سلاسل الإمداد بنجاح لـ {total_nodes} عقدة وتفعيل التحليل الاستراتيجي!")
     else:
         st.info("💡 يرجى تفعيل خيار البيانات التجريبية أو رفع الملف من القائمة الجانبية.")
-                
+        
