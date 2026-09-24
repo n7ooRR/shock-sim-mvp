@@ -204,7 +204,7 @@ else:
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("### 🔮 محرك محاكاة مونت كارلو")
             
-            # استبدال الـ toggle بأزرار اختيار (Radio) استجابتها مضمونة 100% على الموبايل
+            # أزرار اختيار واضحة ومضمونة الاستجابة على الجوال
             simulation_choice = st.radio(
                 "اختر وضع المحاكاة:",
                 ["وضع المراقبة العادي (Normal View)", "تشغيل محاكاة الصدمات بالذكاء الاصطناعي (Run AI Stress Test) 🔥"],
@@ -339,7 +339,7 @@ RECOMMENDATIONS:
             lat_col = next((col for col in df.columns if col.lower() in ['lat', 'latitude']), None)
             lon_col = next((col for col in df.columns if col.lower() in ['lon', 'longitude', 'long']), None)
 
-        if lat_col and lon_col:
+            if lat_col and lon_col:
                 st.map(df, latitude=lat_col, longitude=lon_col, size=50, color='#dc2626' if peak_season_mode else '#4f46e5')
             else:
                 st.info("💡 الملف المرفوع لا يحتوي على أعمدة إحداثيات جغرافية واضحة.")
@@ -352,4 +352,4 @@ RECOMMENDATIONS:
                 st.success(f"🎉 تمت محاكاة صدمات موسم الذروة بنجاح وتحديث كافة المؤشرات وجداول المقارنة التشغيلية!")
     else:
         st.info("💡 يرجى تفعيل خيار البيانات التجريبية أو رفع الملف من القائمة الجانبية.")
-            
+        
