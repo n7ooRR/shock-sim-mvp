@@ -50,12 +50,6 @@ def final_impacts(timeline):
 def calculate_total_damage(impacts):
     return float(sum(max(0.0, x) for x in impacts.values()))
 
-def calculate_containment(baseline_damage, final_damage):
-    if baseline_damage <= 0:
-        return 0.0
-    value = ((baseline_damage - final_damage) / baseline_damage) * 100
-    return float(np.clip(value, 0, 100))
-
 def predictive_forecast(graph, shocks, memory, steps=4, simulations=250, uncertainty=0.12, seed=42):
     rng = np.random.default_rng(seed)
     node_values = {n: [] for n in graph.nodes}
@@ -99,4 +93,4 @@ def predictive_forecast(graph, shocks, memory, steps=4, simulations=250, uncerta
         "p95_damage": float(np.percentile(damage_arr, 95)),
     }
     return forecast, summary
-  
+    
