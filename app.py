@@ -5,20 +5,34 @@ import networkx as nx
 from database import init_db, load_memory_from_db, log_event_to_db, get_event_history_df
 from engine import get_timeline_impacts, final_impacts, calculate_total_damage, predictive_forecast
 
-# تهيئة قاعدة البيانات المحلية
 init_db()
 
 st.set_page_config(
-    page_title="Shock Sim AI — Enterprise MVP",
+    page_title="Shock Sim AI — Enterprise Resilience OS",
     page_icon="🚀",
     layout="wide",
 )
 
-st.title("🚀 Shock Sim AI — Enterprise Resilience OS (MVP)")
+st.title("🚀 Shock Sim AI — Enterprise Resilience OS (Final MVP)")
 st.caption("منصة التوأم الرقمي المتقدمة لتقييم صدمات سلاسل الإمداد وإدارة المخاطر التشغيلية.")
 
-# بناء شبكة افتراضية قياسية
-def build_default_network():
+# خيار تحميل ملف CSV مخصص للشبكة أو استخدام الافتراضية
+st.sidebar.header("📁 بيانات الشبكة والسيناريو")
+uploaded_file = st.sidebar.file_uploader("رفع ملف شبكة الإمداد (CSV)", type=["csv"])
+
+def build_network(uploaded):
+    graph = nx.DiGraph()
+    if uploaded is not None:
+        try:
+            df = pd.read_csv(uploaded)
+            for _, row in df.iterrows():
+                graph.add_edge(row["source"], row["target"], weight=float(row["weight"]), cost=float(row["cost"]))
+            st.sidebar.success("تم تحميل شبكة الموردين المخصصة بنجاح!")
+            return graph
+        except Exception as e:
+            st.sidebar.error(f"خطأ في قراءة الملف: {e}")
+    
+    # الشبكة الافتراضية القياسية
     edges = [
         ("Energy", "Suppliers", 0.85, 35),
         ("Raw_Materials", "Suppliers", 0.80, 30),
@@ -28,19 +42,15 @@ def build_default_network():
         ("Logistics", "Distribution", 0.70, 30),
         ("Distribution", "Market", 0.85, 20),
     ]
-    graph = nx.DiGraph()
     for source, target, weight, cost in edges:
         graph.add_edge(source, target, weight=float(weight), cost=float(cost))
     return graph
 
-graph = build_default_network()
+graph = build_network(uploaded_file)
 
-# تحميل الذاكرة التكيفية المستدامة من قاعدة البيانات
 if "memory" not in st.session_state:
     st.session_state.memory = load_memory_from_db(graph)
 
-# القائمة الجانبية لإعداد السيناريو
-st.sidebar.header("⚙️ إعدادات المحاكاة")
 company_name = st.sidebar.text_input("اسم الشركة", "Global Manufacturing Corp")
 shock_node = st.sidebar.selectbox("مصدر الصدمة الأساسي", list(graph.nodes))
 shock_magnitude = st.sidebar.slider("شدة الصدمة (%)", 10, 100, 80)
@@ -93,7 +103,7 @@ with st.form("event_form"):
     
     if submit_event:
         rec = {
-            "Model": "MVP-v1.0",
+            "Model": "MVP-Final-v1.0",
             "Scenario": f"Shock on {shock_node}",
             "Predicted Expected Damage": total_dmg,
             "Observed Damage": obs_dmg,
@@ -102,4 +112,4 @@ with st.form("event_form"):
         log_event_to_db(rec)
         st.success("تم تسجيل الأحداث بنجاح في قاعدة البيانات الدائمة!")
         st.rerun()
-
+        
