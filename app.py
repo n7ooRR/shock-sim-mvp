@@ -5,7 +5,7 @@ import psycopg2
 # إعدادات الصفحة الأساسية
 st.set_page_config(page_title="ShockSimAI — Enterprise Resilience OS", layout="wide", page_icon="⚡")
 
-# تصميم Frontend احترافي مخصص بالكامل (مع إصلاح ألوان النصوص الجانبية)
+# تصميم Frontend احترافي متجاوب بالكامل (Responsive Enterprise CSS)
 st.markdown("""
 <style>
     /* تغيير خلفية التطبيق بالكامل إلى وضع مظلم مؤسسي فاخر */
@@ -15,12 +15,12 @@ st.markdown("""
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
-    /* إخفاء القوائم العلوية والسفلية الافتراضية لستريمليت */
+    /* إخفاء القوائم الافتراضية لستريمليت */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
-    /* تخصيص الشريط الجانبي بالكامل لضمان وضوح النصوص */
+    /* تخصيص الشريط الجانبي */
     [data-testid="stSidebar"] {
         background-color: #111827;
         border-right: 1px solid #1f2937;
@@ -29,30 +29,31 @@ st.markdown("""
         color: #f3f4f6 !important;
     }
 
-    /* بطاقات المؤشرات الاحترافية (Metrics Cards) */
+    /* بطاقات المؤشرات الاحترافية المتجاوبة */
     .metric-card {
         background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
         border: 1px solid #374151;
-        padding: 24px;
-        border-radius: 14px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-        transition: all 0.3s ease;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        margin-bottom: 12px;
+        text-align: center;
     }
     .metric-title {
-        font-size: 0.875rem;
+        font-size: 0.8rem;
         color: #9ca3af;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
     .metric-value {
-        font-size: 1.875rem;
+        font-size: 1.5rem;
         font-weight: 700;
         color: #ffffff;
     }
     .metric-delta {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         color: #10b981;
         margin-top: 4px;
     }
@@ -60,21 +61,21 @@ st.markdown("""
     /* الهيدر والعناوين الرئيسية */
     .main-header {
         background: linear-gradient(90deg, #1f2937 0%, #111827 100%);
-        padding: 30px;
-        border-radius: 16px;
+        padding: 20px;
+        border-radius: 14px;
         border: 1px solid #374151;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
     }
     .main-title {
-        font-size: 2rem;
+        font-size: 1.5rem;
         font-weight: 800;
         color: #ffffff;
         margin: 0;
     }
     .main-subtitle {
         color: #9ca3af;
-        font-size: 1rem;
-        margin-top: 5px;
+        font-size: 0.85rem;
+        margin-top: 4px;
     }
 
     /* تخصيص الأزرار */
@@ -83,7 +84,7 @@ st.markdown("""
         background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
         color: white;
         border: none;
-        padding: 14px 20px;
+        padding: 12px 16px;
         font-weight: 600;
         border-radius: 10px;
         box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
@@ -155,7 +156,6 @@ else:
     
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 📊 مدخلات الشبكة")
-    # جعل الديمو مفعل افتراضياً لضمان ظهور المؤشرات فوراً
     use_demo = st.sidebar.checkbox("استخدام شبكة إمداد تجريبية (Demo Data)", value=True)
     uploaded_file = st.sidebar.file_uploader("رفع ملف شبكة (CSV أو TXT)", type=["csv", "txt"])
     
@@ -180,7 +180,7 @@ else:
     st.markdown(f"""
         <div class="main-header">
             <h1 class="main-title">⚡ ShockSimAI</h1>
-            <p class="main-subtitle">Enterprise Resilience & Supply Chain Intelligence OS &bull; بيئة العمل: <b>{company_input}</b> &bull; الباقة: <b>{org_tier.upper()}</b></p>
+            <p class="main-subtitle">Enterprise OS &bull; <b>{company_input}</b> ({org_tier.upper()})</p>
         </div>
     """, unsafe_allow_html=True)
 
@@ -189,7 +189,7 @@ else:
         allowed_limit = max_limits.get(org_tier, 500)
         
         if total_nodes > allowed_limit:
-            st.error(f"⚠️ عذراً، شبكتك تحتوي على {total_nodes} عقدة، بينما الحد الأقصى لباقة (**{org_tier}**) هو {allowed_limit} عقدة.")
+            st.error(f"⚠️ تجاوزت الحد الأقصى لباقة {org_tier}.")
         else:
             if 'risk_score' in df.columns:
                 total_risk_factor = df['risk_score'].sum()
@@ -197,42 +197,33 @@ else:
             else:
                 calculated_damage = round(total_nodes * 92.5, 1)
             
-            # رسم بطاقات المؤشرات بتصميم Frontend حديث
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                st.markdown(f"""
-                    <div class="metric-card">
-                        <div class="metric-title">إجمالي الضرر المتوقع</div>
-                        <div class="metric-value">${calculated_damage}M</div>
-                        <div class="metric-delta">↓ -4.2% مقارنة بالربع السابق</div>
-                    </div>
-                """, unsafe_allow_html=True)
+            # عرض المؤشرات بشكل متجاوب يناسب الهواتف والشاشات الصغيرة
+            st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-title">إجمالي الضرر المتوقع</div>
+                    <div class="metric-value">${calculated_damage}M</div>
+                    <div class="metric-delta">↓ -4.2% مقارنة بالربع السابق</div>
+                </div>
                 
-            with col2:
-                st.markdown(f"""
-                    <div class="metric-card">
-                        <div class="metric-title">عقد الشبكة المتأثرة</div>
-                        <div class="metric-value">{total_nodes} عقدة</div>
-                        <div class="metric-delta" style="color: #ef4444;">⚠️ مستوى حرج</div>
-                    </div>
-                """, unsafe_allow_html=True)
+                <div class="metric-card">
+                    <div class="metric-title">عقد الشبكة المتأثرة</div>
+                    <div class="metric-value">{total_nodes} عقدة</div>
+                    <div class="metric-delta" style="color: #ef4444;">⚠️ مستوى حرج</div>
+                </div>
                 
-            with col3:
-                st.markdown(f"""
-                    <div class="metric-card">
-                        <div class="metric-title">حالة النظام السحابي</div>
-                        <div class="metric-value" style="font-size: 1.5rem; margin-top: 5px;">متصل 🟢</div>
-                        <div class="metric-delta">Supabase Secure PostgreSQL</div>
-                    </div>
-                """, unsafe_allow_html=True)
+                <div class="metric-card">
+                    <div class="metric-title">حالة النظام السحابي</div>
+                    <div class="metric-value" style="font-size: 1.3rem;">متصل 🟢</div>
+                    <div class="metric-delta">Supabase Secure PostgreSQL</div>
+                </div>
+            """, unsafe_allow_html=True)
             
             st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("### 🔮 محرك محاكاة مونت كارلو الاحتمالية")
+            st.markdown("### 🔮 محرك محاكاة مونت كارلو")
             
-            if st.button("🚀 تشغيل خوارزمية الذكاء الاصطناعي لمحاكاة الصدمات"):
-                with st.spinner("جاري معالجة الشبكة وإجراء 10,000 عملية محاكاة احصائية..."):
-                    st.success(f"🎉 تمت محاكاة صدمات سلاسل الإمداد بنجاح لـ {total_nodes} عقدة عبر سحابة Supabase!")
+            if st.button("🚀 تشغيل محاكاة الصدمات بالذكاء الاصطناعي"):
+                with st.spinner("جاري معالجة الشبكة وإجراء المحاكاة..."):
+                    st.success(f"🎉 تمت محاكاة صدمات سلاسل الإمداد بنجاح لـ {total_nodes} عقدة عبر السحابة!")
     else:
-        st.info("💡 يرجى تفعيل خيار البيانات التجريبية أو رفع ملف الشبكة من القائمة الجانبية لبدء تشغيل النظام.")
+        st.info("💡 يرجى تفعيل خيار البيانات التجريبية أو رفع الملف من القائمة الجانبية.")
         
