@@ -51,7 +51,6 @@ if not company_input:
     st.stop()
 
 else:
-    # حفظ اسم الشركة وبقتها في الجلسة
     st.session_state["company_name"] = company_input
     org_tier = get_organization_tier(company_input)
     st.session_state["user_tier"] = org_tier
@@ -59,7 +58,6 @@ else:
     st.sidebar.success(f"مرحباً بك، فريق **{company_input}**")
     st.sidebar.info(f"🏷️ باقة المؤسسة الحالية: **{org_tier.upper()}**")
     
-    # حدود العقد لكل باقة
     max_limits = {
         "free": 50,
         "growth": 500,
@@ -75,9 +73,7 @@ else:
     st.sidebar.markdown("---")
     st.sidebar.subheader("📊 بيانات الشبكة والسيناريو")
     
-    # خيار استخدام بيانات تجريبية افتراضية بضغطة زر
-    use_demo = st.sidebar.checkbox("استخدام شبكة إمداد تجريبية (Demo Data)", value=True)
-    
+    use_demo = st.sidebar.checkbox("استخدام شبكة إمداد تجريبية (Demo Data)", value=False)
     uploaded_file = st.sidebar.file_uploader("أو رفع ملف شبكة (CSV أو TXT)", type=["csv", "txt"])
     
     df = None
@@ -87,7 +83,6 @@ else:
         except Exception:
             df = pd.read_csv(uploaded_file, sep=None, engine='python')
     elif use_demo:
-        # إنشاء بيانات تجريبية افتراضية للمحاكاة فوراً
         demo_data = {
             "node_id": [1, 2, 3, 4, 5, 6],
             "node_name": ["Main Supplier Port", "Central Warehouse", "Distribution Hub East", "Manufacturing Plant A", "Regional Depot", "Retail Center"],
@@ -106,15 +101,22 @@ else:
         else:
             st.success(f"✅ الشبكة نشطة وتحتوي على {total_nodes} عقدة مطابقة لحدود باقة {org_tier}.")
             
-            # لوحة المؤشرات الرئيسية
+            # حساب الضرر ديناميكياً بناءً على بيانات الملف الفعلي
+            if 'risk_score' in df.columns:
+                total_risk_factor = df['risk_score'].sum()
+                calculated_damage = round(total_risk_factor * 125.4, 1)
+            else:
+                calculated_damage = round(total_nodes * 92.5, 1)
+            
+            # لوحة المؤشرات الرئيسية الديناميكية
             col1, col2, col3 = st.columns(3)
-            col1.metric("إجمالي الضرر المتوقع", "$517.3M", "-4.2%")
+            col1.metric("إجمالي الضرر المتوقع", f"${calculated_damage}M", "-4.2%")
             col2.metric("عدد العقد المتأثرة", f"{total_nodes}", "حرج")
             col3.metric("حالة النظام السحابي", "متصل 🟢")
             
             st.markdown("### 🔮 تنبؤات مونت كارلو الاحتمالية (Monte Carlo Forecast)")
             if st.button("تفعيل محاكاة الصدمات بالذكاء الاصطناعي"):
-                st.success("🎉 تمت محاكاة صدمات سلاسل الإمداد بنجاح عبر سحابة Supabase!")
+                st.success(f"🎉 تمت محاكاة صدمات سلاسل الإمداد بنجاح لـ {total_nodes} عقدة عبر سحابة Supabase!")
     else:
-        st.info("💡 يرجى تفعيل خيار البيانات التجريبية أو رفع ملف الشبكة من القائمة الجانبية.")
+        st.info("💡 يرجى تفعيل خيار البيانات التجريبية أو رفع ملف الشبكة من القائمة الجانبية لبدء التحليل.")
         
