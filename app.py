@@ -1,102 +1,117 @@
 import streamlit as st
-from supabase import create_client, Client
+from supabase import create_client
 
-# إعدادات الاتصال بقاعدة بيانات Supabase
-SUPABASE_URL = st.secrets.get("SUPABASE_URL", "YOUR_SUPABASE_URL")
-SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", "YOUR_SUPABASE_KEY")
+# إعداد الصفحة
+st.set_page_config(page_title="ShockSimAI - بوابة المؤسسات", layout="wide")
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# جلب بيانات الاتصال من إعدادات الأمان في Streamlit Secrets أو وضعها مباشرة
+try:
+    SUPABASE_URL = st.secrets["SUPABASE_URL"]
+    SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
+except Exception:
+    # قيم احتياطية في حال لم يتم إعدادها في الـ Secrets
+    SUPABASE_URL = "YOUR_SUPABASE_URL"
+    SUPABASE_KEY = "YOUR_SUPABASE_KEY"
 
-def check_company_auth():
-    st.sidebar.title("🔐 بوابة المؤسسات الآمنة")
-    
-    # خيار تسجيل الدخول أو التسجيل الجديد
-    auth_mode = st.sidebar.radio("اختر الحالة", ["تسجيل دخول شركة", "تسجيل شركة جديدة"])
-    
-    if auth_mode == "تسجيل دخول شركة":
-        company_name_input = st.sidebar.text_input("اسم الشركة (Company Name)")
-        login_btn = st.sidebar.button("دخول للوحة المحاكاة")
-        
-        if login_btn:
-            if company_name_input:
-                # البحث عن الشركة في قاعدة بيانات Supabase
-                response = supabase.table("companies").select("*").eq("company_name", company_name_input).execute()
-                
-                if response.data and len(response.data) > 0:
-                    st.session_state["authenticated"] = True
-                    st.session_state["company_data"] = response.data[0]
-                    st.sidebar.success(f"مرحباً بك، {company_name_input}!")
-                    st.rerun()
-                else:
-                    st.sidebar.error("اسم الشركة غير مسجل. يرجى التسجيل أولاً.")
-            else:
-                st.sidebar.warning("يرجى إدخال اسم الشركة.")
-                
-    else: # تسجيل شركة جديدة
-        new_company_name = st.sidebar.text_input("اسم الشركة الجديد")
-        selected_tier = st.sidebar.selectbox("اختر الباقة", ["Free", "Growth", "Enterprise"])
-        register_btn = st.sidebar.button("إنشاء حساب المؤسسة")
-        
-        if register_btn:
-            if new_company_name:
-                # إدخال الشركة الجديدة في Supabase
-                data = {"company_name": new_company_name, "subscription_tier": selected_tier}
-                res = supabase.table("companies").insert(data).execute()
-                
-                if res.data:
-                    st.sidebar.success("تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.")
-                else:
-                    st.sidebar.error("حدث خطأ أثناء التسجيل.")
-            else:
-                st.sidebar.warning("يرجى إدخال اسم الشركة.")
+# إنشاء الاتصال بـ Supabase
+@st.cache_resource
+def init_supabase():
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# التحقق مما إذا كانت الشركة مسجلة الدخول أم لا
+try:
+    supabase = init_supabase()
+except Exception as e:
+    st.error(f"خطأ في الاتصال بقاعدة البيانات: {e}")
+
+# تهيئة حالة الجلسة (Session State)
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
+if "company_name" not in st.session_state:
+    st.session_state["company_name"] = ""
+if "company_id" not in st.session_state:
+    st.session_state["company_id"] = None
 
-if not st.session_state["authenticated"]:
-    check_company_auth()
-    st.stop() # إيقاف عرض باقي المنصة لحين تسجيل الدخول
-import pandas as pd
+# الشريط الجانبي للمصادقة وتسجيل الشركات
+st.sidebar.title("🔐 بوابة المؤسسات الآمنة")
 
-# إذا كانت الشركة مسجلة الدخول بنجاح، يتم فتح لوحة التحكم الخاصة بها
-if st.session_state.get("authenticated", False):
-    company = st.session_state["company_data"]
+auth_mode = st.sidebar.radio("اختر الحالة", ["تسجيل دخول شركة", "تسجيل شركة جديدة"])
+
+if auth_mode == "تسجيل شركة جديدة":
+    st.sidebar.subheader("تسجيل شركة جديدة")
+    new_company_name = st.sidebar.text_input("اسم الشركة الجديد", key="new_comp_input")
+    selected_tier = st.sidebar.selectbox("اختر الباقة", ["Enterprise", "Pro", "Standard"], key="tier_input")
+    register_btn = st.sidebar.button("إنشاء حساب المؤسسة")
     
-    st.title(f"📊 لوحة تحكم شركة: {company['company_name']}")
-    st.write(f"**الباقة الحالية:** {company['subscription_tier']}")
+    if register_btn:
+        if new_company_name.strip():
+            try:
+                data = {"company_name": new_company_name.strip(), "subscription_tier": selected_tier}
+                res = supabase.table("companies").insert(data).execute()
+                st.sidebar.success("تم إنشاء الحساب بنجاح! يمكنك الانتقال لتسجيل الدخول الآن.")
+            except Exception as e:
+                st.sidebar.error(f"فشل التسجيل (تأكد أن الاسم غير مكرر): {e}")
+        else:
+            st.sidebar.warning("يرجى إدخال اسم الشركة.")
+
+else:  # حالة تسجيل الدخول
+    st.sidebar.subheader("تسجيل دخول شركة")
+    login_company_name = st.sidebar.text_input("اسم الشركة المسجل", key="login_comp_input")
+    login_btn = st.sidebar.button("دخول للوحة المحاكاة")
+
+    if login_btn:
+        if login_company_name.strip():
+            try:
+                res = supabase.table("companies").select("*").eq("company_name", login_company_name.strip()).execute()
+                if res.data and len(res.data) > 0:
+                    st.session_state["authenticated"] = True
+                    st.session_state["company_name"] = res.data[0]["company_name"]
+                    st.session_state["company_id"] = res.data[0]["id"]
+                    st.sidebar.success("تم تسجيل الدخول بنجاح!")
+                    st.rerun()
+                else:
+                    st.sidebar.error("اسم الشركة غير مسجل، يرجى التحقق أو إنشاء حساب جديد.")
+            except Exception as e:
+                st.sidebar.error(f"حدث خطأ أثناء الاتصال: {e}")
+        else:
+            st.sidebar.warning("يرجى إدخال اسم الشركة.")
+
+# الواجهة الرئيسية للتطبيق
+st.title("🛡️ منصة ShockSimAI - محاكاة شبكات الإمداد وتحليل المخاطر بالذكاء الاصطناعي")
+
+if st.session_state.get("authenticated", False):
+    st.success(مرحباً بك في لوحة تحكم شركة: **{st.session_state['company_name']}** (معرّف الشركة: {st.session_state['company_id']}))
     
     st.divider()
+    st.subheader("📁 الخطوة الثانية: رفع بيانات شبكة الإمداد (CSV)")
     
-    # --- الخطوة 2: رفع وتحليل بيانات الـ CSV ---
-    st.header("📁 إدارة شبكة الإمداد والبيانات")
-    st.write("قم برفع ملف الـ CSV الخاص ببيانات الموردين، المستودعات، أو مسارات الشحن.")
-    
-    uploaded_file = st.file_uploader("اختر ملف الـ CSV", type=["csv"])
+    uploaded_file = st.file_uploader("اختر ملف الـ CSV الخاص بشبكة الموردين", type=["csv"])
     
     if uploaded_file is not None:
-        # قراءة الملف باستخدام مكتبة Pandas
-        df = pd.read_csv(uploaded_file)
-        
-        st.subheader("👀 معاينة البيانات المرفوعة:")
-        st.dataframe(df.head())
-        
-        # زر لحفظ البيانات في قاعدة بيانات Supabase الخاصة بالشركة
-        if st.button("حفظ البيانات في قاعدة البيانات"):
-            try:
-                # تحويل البيانات إلى صيغة نصية أو قاموس لتخزينها
-                data_records = df.to_dict(orient="records")
-                
-                # إدخال البيانات في جدول company_networks مع ربطها بـ id الشركة
-                insert_response = supabase.table("company_networks").insert({
-                    "company_id": company["id"],
-                    "network_data": str(data_records)
-                }).execute()
-                
-                if insert_response.data:
-                    st.success("تم حفظ بيانات الشبكة بنجاح في قاعدة بيانات Supabase الخاصة بمؤسستك!")
-                else:
-                    st.error("حدث خطأ أثناء حفظ البيانات في قاعدة البيانات.")
-            except Exception as e:
-                st.error(f"حدث خطأ غير متوقع: {e}")
-                
+        try:
+            file_content = uploaded_file.getvalue().decode("utf-8")
+            st.info("تم قراءة الملف بنجاح وإليك المعاينة:")
+            st.text(file_content[:500] + "..." if len(file_content) > 500 else file_content)
+            
+            if st.button("حفظ الشبكة في قاعدة البيانات"):
+                net_data = {
+                    "company_id": st.session_state["company_id"],
+                    "network_data": file_content
+                }
+                save_res = supabase.table("company_networks").insert(net_data).execute()
+                st.success("تم حفظ بيانات شبكة الإمداد بنجاح في قاعدة البيانات وجاهزة للتحليل!")
+        except Exception as e:
+            st.error(f"حدث خطأ أثناء معالجة الملف: {e}")
+            
+    st.divider()
+    st.subheader("⚡ محرك المحاكاة والذكاء الاصطناعي (قريباً في الخطوة الثالثة)")
+    st.write("بعد اكتمال رفع البيانات وحفظها، سنقوم بتفعيل محرّك الصدمات وتحليل المخاطر هنا.")
+
+    if st.sidebar.button("تسجيل خروج"):
+        st.session_state["authenticated"] = False
+        st.session_state["company_name"] = ""
+        st.session_state["company_id"] = None
+        st.rerun()
+
+else:
+    st.warning("⚠️ يرجى تسجيل الدخول عبر القائمة الجانبية (Sidebar) للوصول إلى لوحة التحكم وإدارة شبكات الإمداد الخاصة بشركتك.")
+    
