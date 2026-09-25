@@ -57,3 +57,46 @@ if "authenticated" not in st.session_state:
 if not st.session_state["authenticated"]:
     check_company_auth()
     st.stop() # إيقاف عرض باقي المنصة لحين تسجيل الدخول
+import pandas as pd
+
+# إذا كانت الشركة مسجلة الدخول بنجاح، يتم فتح لوحة التحكم الخاصة بها
+if st.session_state.get("authenticated", False):
+    company = st.session_state["company_data"]
+    
+    st.title(f"📊 لوحة تحكم شركة: {company['company_name']}")
+    st.write(f"**الباقة الحالية:** {company['subscription_tier']}")
+    
+    st.divider()
+    
+    # --- الخطوة 2: رفع وتحليل بيانات الـ CSV ---
+    st.header("📁 إدارة شبكة الإمداد والبيانات")
+    st.write("قم برفع ملف الـ CSV الخاص ببيانات الموردين، المستودعات، أو مسارات الشحن.")
+    
+    uploaded_file = st.file_uploader("اختر ملف الـ CSV", type=["csv"])
+    
+    if uploaded_file is not None:
+        # قراءة الملف باستخدام مكتبة Pandas
+        df = pd.read_csv(uploaded_file)
+        
+        st.subheader("👀 معاينة البيانات المرفوعة:")
+        st.dataframe(df.head())
+        
+        # زر لحفظ البيانات في قاعدة بيانات Supabase الخاصة بالشركة
+        if st.button("حفظ البيانات في قاعدة البيانات"):
+            try:
+                # تحويل البيانات إلى صيغة نصية أو قاموس لتخزينها
+                data_records = df.to_dict(orient="records")
+                
+                # إدخال البيانات في جدول company_networks مع ربطها بـ id الشركة
+                insert_response = supabase.table("company_networks").insert({
+                    "company_id": company["id"],
+                    "network_data": str(data_records)
+                }).execute()
+                
+                if insert_response.data:
+                    st.success("تم حفظ بيانات الشبكة بنجاح في قاعدة بيانات Supabase الخاصة بمؤسستك!")
+                else:
+                    st.error("حدث خطأ أثناء حفظ البيانات في قاعدة البيانات.")
+            except Exception as e:
+                st.error(f"حدث خطأ غير متوقع: {e}")
+                
