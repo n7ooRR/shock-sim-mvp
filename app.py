@@ -4,12 +4,11 @@ from supabase import create_client
 # إعداد الصفحة
 st.set_page_config(page_title="ShockSimAI - بوابة المؤسسات", layout="wide")
 
-# جلب بيانات الاتصال من إعدادات الأمان في Streamlit Secrets أو وضعها مباشرة
+# جلب بيانات الاتصال من إعدادات الأمان في Streamlit Secrets
 try:
     SUPABASE_URL = st.secrets["SUPABASE_URL"]
     SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 except Exception:
-    # قيم احتياطية في حال لم يتم إعدادها في الـ Secrets
     SUPABASE_URL = "YOUR_SUPABASE_URL"
     SUPABASE_KEY = "YOUR_SUPABASE_KEY"
 
@@ -79,7 +78,7 @@ else:  # حالة تسجيل الدخول
 st.title("🛡️ منصة ShockSimAI - محاكاة شبكات الإمداد وتحليل المخاطر بالذكاء الاصطناعي")
 
 if st.session_state.get("authenticated", False):
-    st.success(مرحباً بك في لوحة تحكم شركة: **{st.session_state['company_name']}** (معرّف الشركة: {st.session_state['company_id']}))
+    st.success(f"مرحباً بك في لوحة تحكم شركة: **{st.session_state['company_name']}** (معرّف الشركة: {st.session_state['company_id']})")
     
     st.divider()
     st.subheader("📁 الخطوة الثانية: رفع بيانات شبكة الإمداد (CSV)")
